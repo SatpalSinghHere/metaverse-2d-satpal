@@ -60,3 +60,53 @@ describe("Authenticate", ()=>{
         expect(response.status).toBe(403)
     })
 })
+
+describe("User metadata endpoints", ()=>{
+    let token = ""
+    let avatarId = ""
+    beforeAll(async()=>{
+        const username = "satpal"+Math.random()
+        const password = "password"
+
+        await axios.post(`${BACKEND_URL}/api/v1/signup`, {
+            username, password, type:"admin"
+        })
+
+        const response = await axios.post(`${BACKEND_URL}/api/v1/signin`, {
+            username, password
+        })
+        token = response.body.token
+
+        const avatarResponse = await axios.post(`${BACKEND_URL}/api/v1/avatar`, {
+            imageUrl: "https://w7.pngwing.com/pngs/680/217/png-transparent-avatar-man-8-bit-guy-dude-gaming-graphics-computer-generated-technology-thumbnail.png",
+            name: "avatar1"
+        })
+
+        const avatarId = avatarResponse.body.avatarId
+    })
+
+    test("User cannot update their metadat with wrong avatar id", async()=>{
+        const response = await axios.patch(`${BACKEND_URL}/api/v1/user/metadata`, {
+            avatar: "wrongid"
+        })
+        expect(response.status).toBe(400)
+    })
+
+    test("User can update their metadata with correct avatar id", async()=>{
+        const response = await axios.patch(`${BACKEND_URL}/api/v1/user/metadata`, {
+            avatar: "correctid"
+        },{
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        })
+        expect(response.status).toBe(200)
+    })
+
+    test("User cannot update their metadata if auth header is not present", async()=>{
+        const response = await axios.patch(`${BACKEND_URL}/api/v1/user/metadata`, {
+            avatar: "correctid"
+        })
+        expect(response.status).toBe(403)
+    })
+})
