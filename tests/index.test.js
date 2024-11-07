@@ -188,31 +188,31 @@ describe("Space information", ()=>{
         })
         userToken = userSigninResponse.body.token 
         
-        const element1 = await axios.post(`${BACKEND_URL}/api/v1/admin/element`, {
+        const element1Response = await axios.post(`${BACKEND_URL}/api/v1/admin/element`, {
             "imageUrl": "https://w7.pngwing.com/pngs/680/217/png-transparent",
             "width": 1,
             "height": 1,
             "static": true
         },{
             headers: {
-                authorization: `Bearer ${token}`
+                authorization: `Bearer ${adminToken}`
             }
         })
-        const element2 = await axios.post(`${BACKEND_URL}/api/v1/admin/element`, {
+        const element2Response = await axios.post(`${BACKEND_URL}/api/v1/admin/element`, {
             "imageUrl": "https://w7.pngwing.com/pngs/680/217/png-transparent",
             "width": 1,
             "height": 1,
             "static": true
         },{
             headers: {
-                authorization: `Bearer ${token}`
+                authorization: `Bearer ${adminToken}`
             }
         })
 
-        element1Id = element1.id
-        element2Id = element2.id
+        element1Id = element1Response.data.id
+        element2Id = element2Response.data.id
 
-        const map = await axios.post(`${BACKEND_URL}/api/v1/admin/map`, {
+        const mapResponse = await axios.post(`${BACKEND_URL}/api/v1/admin/map`, {
             "thumbnail": "https://e7.pngegg.com/pngimages/1001/156/png-clipart-map-pixel-art-map-angle-white.png",
             "dimensions": "100x200",
             "defaultElements": [
@@ -234,11 +234,11 @@ describe("Space information", ()=>{
             ]
         },{
             headers: {
-                authorization: `Bearer ${token}`
+                authorization: `Bearer ${adminToken}`
             }
         })
 
-        mapid = map.id
+        mapid = mapResponse.data.id
 
         
     })
@@ -393,31 +393,31 @@ describe('Arena Endpoints', ()=>{
         })
         userToken = userSigninResponse.body.token 
         
-        const element1 = await axios.post(`${BACKEND_URL}/api/v1/admin/element`, {
+        const element1Response = await axios.post(`${BACKEND_URL}/api/v1/admin/element`, {
             "imageUrl": "https://w7.pngwing.com/pngs/680/217/png-transparent",
             "width": 1,
             "height": 1,
             "static": true
         },{
             headers: {
-                authorization: `Bearer ${token}`
+                authorization: `Bearer ${adminToken}`
             }
         })
-        const element2 = await axios.post(`${BACKEND_URL}/api/v1/admin/element`, {
+        const element2Response = await axios.post(`${BACKEND_URL}/api/v1/admin/element`, {
             "imageUrl": "https://w7.pngwing.com/pngs/680/217/png-transparent",
             "width": 1,
             "height": 1,
             "static": true
         },{
             headers: {
-                authorization: `Bearer ${token}`
+                authorization: `Bearer ${adminToken}`
             }
         })
 
-        element1Id = element1.id
-        element2Id = element2.id
+        element1Id = element1Response.data.id
+        element2Id = element2Response.data.id
 
-        const map = await axios.post(`${BACKEND_URL}/api/v1/admin/map`, {
+        const mapResponse = await axios.post(`${BACKEND_URL}/api/v1/admin/map`, {
             "thumbnail": "https://e7.pngegg.com/pngimages/1001/156/png-clipart-map-pixel-art-map-angle-white.png",
             "dimensions": "100x200",
             "defaultElements": [
@@ -439,13 +439,13 @@ describe('Arena Endpoints', ()=>{
             ]
         },{
             headers: {
-                authorization: `Bearer ${token}`
+                authorization: `Bearer ${adminToken}`
             }
         })
 
-        mapid = map.id
+        mapid = mapResponse.data.id
 
-        const space = await axios.post(`${BACKEND_URL}/api/v1/space`,{
+        const spaceResponse = await axios.post(`${BACKEND_URL}/api/v1/space`,{
             "name":"test",
             "dimensions":"100x200",
             "mapId":mapid
@@ -455,7 +455,7 @@ describe('Arena Endpoints', ()=>{
             } 
         })
 
-        spaceId = space.spaceId
+        spaceId = spaceResponse.data.spaceId
 
         
     })
@@ -463,7 +463,7 @@ describe('Arena Endpoints', ()=>{
     test('Incorrect spaceId returns a 400', async()=>{
         const response = await axios.get(`${BACKEND_URL}/api/v1/space/wrongSpaceId`,{
             headers: {
-                authorization: `Bearer ${token}`
+                authorization: `Bearer ${adminToken}`
             }
         })
         expect(response.statusCode).toBe(400)
@@ -472,7 +472,7 @@ describe('Arena Endpoints', ()=>{
     test('Correct space id returns all the elements', async()=>{
         const response = await axios.get(`${BACKEND_URL}/api/v1/space/${spaceId}`,{
             headers: {
-                authorization: `Bearer ${token}`
+                authorization: `Bearer ${adminToken}`
             }
         })
         expect(response.data.dimensions).toBe("100x200")
@@ -482,7 +482,7 @@ describe('Arena Endpoints', ()=>{
     test('Delete endpoint is able to delete an element', async()=>{
         const response = await axios.get(`${BACKEND_URL}/api/v1/space/${spaceId}`,{
             headers: {
-                authorization: `Bearer ${token}`
+                authorization: `Bearer ${adminToken}`
             }
         })
         await axios.delete(`${BACKEND_URL}/api/v1/space/element`,{
@@ -491,7 +491,7 @@ describe('Arena Endpoints', ()=>{
         })
         const newResponse = await axios.get(`${BACKEND_URL}/api/v1/space/${spaceId}`,{
             headers: {
-                authorization: `Bearer ${token}`
+                authorization: `Bearer ${adminToken}`
             }
         })
         expect(response.data.elements.length).toBe(1)
@@ -506,7 +506,7 @@ describe('Arena Endpoints', ()=>{
             "y": 10000000, 
         },{
             headers: {
-                authorization: `Bearer ${token}`
+                authorization: `Bearer ${adminToken}`
             }
         })
         
@@ -522,10 +522,153 @@ describe('Arena Endpoints', ()=>{
             "y": 10
         },{
             headers: {
-                authorization: `Bearer ${token}`
+                authorization: `Bearer ${adminToken}`
             }
         })
         const newResponse = await axios.get(`${BACKEND_URL}/api/v1/space/${spaceId}`)
         expect(response.data.elements.length).toBe(3)
+    })
+})
+
+describe('Admin Endpoints', async()=>{
+    
+    let adminToken = ""
+    let adminId=""
+    let userToken = ""
+    let userId = ""
+    
+
+    beforeAll(async()=>{
+        const username = "satpal"+Math.random()
+        const password = "password"
+
+        const signupResponse = await axios.post(`${BACKEND_URL}/api/v1/signup`, {
+            username, password, type:"admin"
+        })
+
+        adminId = signupResponse.body.userId 
+
+        const signinResponse = await axios.post(`${BACKEND_URL}/api/v1/signin`, {
+            username, password
+        })
+        adminToken = signinResponse.body.token 
+        
+        const userSignupResponse = await axios.post(`${BACKEND_URL}/api/v1/signup`, {
+            username: username + '-user', password, type:"user"
+        })
+
+        userId = userSignupResponse.body.userId 
+
+        const userSigninResponse = await axios.post(`${BACKEND_URL}/api/v1/signin`, {
+            username: username + '-user', password
+        })
+        userToken = userSigninResponse.body.token 
+    })
+
+    test('User is not able to hit admin endpoints', async()=>{
+        const elementResponse = await axios.post(`${BACKEND_URL}/api/v1/admin/element`, {
+            "imageUrl": "https://w7.pngwing.com/pngs/680/217/png-transparent",
+            "width": 1,
+            "height": 1,
+            "static": true
+        },{
+            headers: {
+                authorization: `Bearer ${usertoken}`
+            }
+        })
+
+        const mapResponse = await axios.post(`${BACKEND_URL}/api/v1/admin/map`, {
+            "thumbnail": "https://e7.pngegg.com/pngimages/1001/156/png-clipart-map-pixel-art-map-angle-white.png",
+            "dimensions": "100x200",
+            "defaultElements": []
+        },{
+            headers: {
+                authorization: `Bearer ${userToken}`
+            }
+        })
+
+        const avatarResponse = await axios.post(`${BACKEND_URL}/api/v1/avatar`, {
+            imageUrl: "https://w7.pngwing.com/pngs/680/217/png-transparent-avatar-man-8-bit-guy-dude-gaming-graphics-computer-generated-technology-thumbnail.png",
+            name: "avatar1"
+        },{
+            headers: {
+                authorization: `Bearer ${userToken}`
+            }
+        })
+
+        const updateElementResponse =  await axios.put(`${BACKEND_URL}/api/v1/admin/element/123`, {
+            imageUrl: "https://w7.pngwing.com/pngs/680/217/png-transparent-avatar-man-8-bit-guy-dude-gaming-graphics-computer-generated-technology-thumbnail.png",
+            
+        },{
+            headers: {
+                authorization: `Bearer ${userToken}`
+            }
+        })
+
+        expect(elementResponse.statusCode).toBe(403)
+        expect(mapResponse.statusCode).toBe(403)
+        expect(avatarResponse.statusCode).toBe(403)
+        expect(updateElementResponse.statusCode).toBe(403)
+    })
+
+    test('Admin is able to hit admin endpoints', async()=>{
+        const elementResponse = await axios.post(`${BACKEND_URL}/api/v1/admin/element`, {
+            "imageUrl": "https://w7.pngwing.com/pngs/680/217/png-transparent",
+            "width": 1,
+            "height": 1,
+            "static": true
+        },{
+            headers: {
+                authorization: `Bearer ${adminToken}`
+            }
+        })
+
+        const mapResponse = await axios.post(`${BACKEND_URL}/api/v1/admin/map`, {
+            "thumbnail": "https://e7.pngegg.com/pngimages/1001/156/png-clipart-map-pixel-art-map-angle-white.png",
+            "dimensions": "100x200",
+            "defaultElements": []
+        },{
+            headers: {
+                authorization: `Bearer ${adminToken}`
+            }
+        })
+
+        const avatarResponse = await axios.post(`${BACKEND_URL}/api/v1/avatar`, {
+            imageUrl: "https://w7.pngwing.com/pngs/680/217/png-transparent-avatar-man-8-bit-guy-dude-gaming-graphics-computer-generated-technology-thumbnail.png",
+            name: "avatar1"
+        },{
+            headers: {
+                authorization: `Bearer ${adminToken}`
+            }
+        })
+
+        expect(elementResponse.statusCode).toBe(403)
+        expect(mapResponse.statusCode).toBe(403)
+        expect(avatarResponse.statusCode).toBe(403)
+        
+    })
+
+    test('Admin is able to update the imageUrl for an element', async()=>{
+        const elementResponse = await axios.post(`${BACKEND_URL}/api/v1/admin/element`, {
+            "imageUrl": "https://w7.pngwing.com/pngs/680/217/png-transparent",
+            "width": 1,
+            "height": 1,
+            "static": true
+        },{
+            headers: {
+                authorization: `Bearer ${adminToken}`
+            }
+        })
+
+        const updateElementResponse =  await axios.put(`${BACKEND_URL}/api/v1/admin/element/${elementResponse.data.id}`, {
+            imageUrl: "https://w7.pngwing.com/pngs/680/217/png-transparent-avatar-man-8-bit-guy-dude-gaming-graphics-computer-generated-technology-thumbnail.png",
+            
+        },{
+            headers: {
+                authorization: `Bearer ${userToken}`
+            }
+        })
+
+        expect(updateElementResponse.statusCode).toBe(200)
     })
 })
