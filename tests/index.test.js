@@ -7,6 +7,7 @@ test('adds 1 + 2 to equal 3', () => {
 });
 
 const BACKEND_URL = "http://localhost:3000"
+const WS_URL = "ws://localhost:3001"
 
 describe("Authenticate", ()=>{
     test("User is able to sign up only for once", async()=>{
@@ -671,4 +672,225 @@ describe('Admin Endpoints', async()=>{
 
         expect(updateElementResponse.statusCode).toBe(200)
     })
+})
+
+describe('Websockets tests', ()=>{
+    let adminToken
+    let adminId
+    let userToken
+    let userId
+    let mapid=''
+    let element1Id =''
+    let element2Id =''
+    let spaceId = ""
+    let ws1Messages = []
+    let ws2Messages = []
+    let userX
+    let userY
+    let adminX
+    let adminY
+
+    function waitForAndPopLatestMessage(messageArray){
+        return new Promise(r=>{
+            if(messageArray.length>0){
+              resolve(messageArray.shift())  
+            }else{
+                let interval = setInterval(()=>{
+                    if(messageArray.length > 0){
+                        resolve(messageArray.shift())
+                        clearInterval(interval)
+                    }
+                }, 100)
+            }
+        })
+    }
+
+    async function setupHTTP(){
+        const username = 'satpal'+Math.random()
+        const password = 'password'
+
+        const adminSignupResponse = await axios.post(`${BACKEND_URL}/api/v1/signup`,{
+            username, password, role:'admin'
+        })
+
+        const adminSigninResponse = await axios.post(`${BACKEND_URL}/api/v1/signin`,{
+            username, password
+        })
+        adminid = adminSignupResponse.data.userId
+        adminToken = adminSigninResponse.data.token
+
+        const userSignupResponse = await axios.post(`${BACKEND_URL}/api/v1/signup`,{
+            username: username+'-user', password, role:'user'
+        })
+
+        const userSigninResponse = await axios.post(`${BACKEND_URL}/api/v1/signin`,{
+            username: username+'-user', password
+        })
+        userId = adminSignupResponse.data.userId
+        userToken = adminSigninResponse.data.token
+
+        const element1Response = await axios.post(`${BACKEND_URL}/api/v1/admin/element`, {
+            "imageUrl": "https://w7.pngwing.com/pngs/680/217/png-transparent",
+            "width": 1,
+            "height": 1,
+            "static": true
+        },{
+            headers: {
+                authorization: `Bearer ${adminToken}`
+            }
+        })
+        const element2Response = await axios.post(`${BACKEND_URL}/api/v1/admin/element`, {
+            "imageUrl": "https://w7.pngwing.com/pngs/680/217/png-transparent",
+            "width": 1,
+            "height": 1,
+            "static": true
+        },{
+            headers: {
+                authorization: `Bearer ${adminToken}`
+            }
+        })
+
+        element1Id = element1Response.data.id
+        element2Id = element2Response.data.id
+
+        const mapResponse = await axios.post(`${BACKEND_URL}/api/v1/admin/map`, {
+            "thumbnail": "https://e7.pngegg.com/pngimages/1001/156/png-clipart-map-pixel-art-map-angle-white.png",
+            "dimensions": "100x200",
+            "defaultElements": [
+                {
+                    elementId: element1Id,
+                    x: 20,
+                    y: 20
+                },
+                {
+                    elementId: element2Id,
+                    x: 18,
+                    y: 20
+                },
+                {
+                    elementId: element2Id,
+                    x: 19,
+                    y: 20
+                }
+            ]
+        },{
+            headers: {
+                authorization: `Bearer ${adminToken}`
+            }
+        })
+
+        mapid = mapResponse.data.id
+
+        const spaceResponse = await axios.post(`${BACKEND_URL}/api/v1/space`,{
+            "name":"test",
+            "dimensions":"100x200",
+            "mapId":mapid
+        },{
+            headers: {
+                authorization: `Bearer ${userToken}`
+            } 
+        })
+
+        spaceId = spaceResponse.data.spaceId 
+    }
+
+    async function setupWs(){
+        ws1 = new WebSocket(WS_URL)
+        
+        await new Promise(r=>{
+            ws1.onopen = r
+        })
+        
+        ws1.onmessage = (event) =>{
+            ws1Messages.push(JSON.parse(event.data))
+        }
+
+        ws2 = new WebSocket(WS_URL)
+
+        await new Promise(r=>{
+            ws2.onopen = r
+        })        
+        ws2.onmessage = (event) =>{
+            ws2Messages.push(JSON.parse(event.data))
+        }
+    }
+
+    beforeAll(async()=>{
+        setupHTTP()
+        setupWs()
+    })
+
+    test("Get back ack for joining the space", async()=>{
+        ws1.send(JSON.stringify({
+            "type": "join",
+            "payloads": {
+                "spaceId": spaceId,
+                "token": adminToken            }
+        }))
+        const message1 = await waitForAndPopLatestMessage(ws1Messages)
+
+        ws1.send(JSON.stringify({
+            "type": "join",
+            "payloads": {
+                "spaceId": spaceId,
+                "token": userToken            }
+        }))
+
+        const message2 = await waitForAndPopLatestMessage(ws2Messages)
+        const message3 = await waitForAndPopLatestMessage(ws1Messages)
+
+        expect(message1.type).toBe("space-joined")
+        expect(message2.type).toBe("space-joined")
+
+        expect(message1.payload.users.length).toBe(0)
+        expect(message2.payload.users.length).toBe(1)
+        expect(message3.type).toBe("user-join")
+        expect(message3.payload.x).toBe(message2.payload.spawn.x)
+        expect(message3.payload.y).toBe(message2.payload.spawn.y)
+        expect(message3.payload.userId).toBe(userId)
+
+        expect(message1.payload.users.length + message2.payload.users.length).toBe(1)
+
+        adminX = message1.payload.spawn.x
+        adminY = message1.payload.spawn.y
+
+        userX = message2.payload.spawn.x
+        userY = message2.payload.spawn.y
+    })
+
+    test('User should not be able to move accross the boundary of the wall', async()=>{
+        ws1.send(JSON.stringify)({
+            type:"movement",
+            payload : {
+                x: 1000000,
+                y: 10000
+            }
+        })
+        const message = await waitForAndPopLatestMessage(ws1Messages)
+        expect(message.type).toBe("movement-rejected")
+        expect(message.payload.x).toBe(adminX)
+        expect(message.payload.y).toBe(adminY)
+    })
+
+    test('User should not be able to move two bloacks at the same time', async()=>{
+        ws1.send(JSON.stringify)({
+            type:"movement",
+            payload : {
+                x: adminX + 2,
+                y: 10000
+            }
+        })
+        const message = await waitForAndPopLatestMessage(ws2Messages)
+        expect(message.type).toBe("movement-rejected")
+        expect(message.payload.x).toBe(adminX)
+        expect(message.payload.y).toBe(adminY)
+    })    
+    
+    test('If a user leaves, the other user receives a leave event', async()=>{
+        ws1.close()
+        const message = await waitForAndPopLatestMessage(ws2Messages)
+        expect(message.type).toBe("user-left")
+        expect(message.payload.userId).toBe(adminUserId)
+        
+    }) 
 })
