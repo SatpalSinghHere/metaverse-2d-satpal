@@ -178,13 +178,13 @@ describe("Space information", ()=>{
         adminToken = signinResponse.body.token 
         
         const userSignupResponse = await axios.post(`${BACKEND_URL}/api/v1/signup`, {
-            username, password, type:"user"
+            username: username + '-user', password, type:"user"
         })
 
-        userId = signupResponse.body.userId 
+        userId = userSignupResponse.body.userId 
 
         const userSigninResponse = await axios.post(`${BACKEND_URL}/api/v1/signin`, {
-            username, password
+            username: username + '-user', password
         })
         userToken = userSigninResponse.body.token 
         
@@ -365,6 +365,8 @@ describe('Arena Endpoints', ()=>{
     let adminId=""
     let userToken = ""
     let userId = ""
+    let spaceId = ""
+
     beforeAll(async()=>{
         const username = "satpal"+Math.random()
         const password = "password"
@@ -381,13 +383,13 @@ describe('Arena Endpoints', ()=>{
         adminToken = signinResponse.body.token 
         
         const userSignupResponse = await axios.post(`${BACKEND_URL}/api/v1/signup`, {
-            username, password, type:"user"
+            username: username + '-user', password, type:"user"
         })
 
-        userId = signupResponse.body.userId 
+        userId = userSignupResponse.body.userId 
 
         const userSigninResponse = await axios.post(`${BACKEND_URL}/api/v1/signin`, {
-            username, password
+            username: username + '-user', password
         })
         userToken = userSigninResponse.body.token 
         
@@ -443,6 +445,28 @@ describe('Arena Endpoints', ()=>{
 
         mapid = map.id
 
+        const space = await axios.post(`${BACKEND_URL}/api/v1/space`,{
+            "name":"test",
+            "dimensions":"100x200",
+            "mapId":mapid
+        },{
+            headers: {
+                authorization: `Bearer ${userToken}`
+            } 
+        })
+
+        spaceId = space.spaceId
+
         
+    })
+
+    test('Incorrect spaceId returns a 400', async()=>{
+        const response = await axios.get(`${BACKEND_URL}/api/v1/space/wrongSpaceId`)
+        expect(response.statusCode).toBe(400)
+    })
+
+    test('Incorrect spaceId returns a 400', async()=>{
+        const response = await axios.get(`${BACKEND_URL}/api/v1/space/wrongSpaceId`)
+        expect(response.statusCode).toBe(400)
     })
 })
