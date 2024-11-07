@@ -461,23 +461,39 @@ describe('Arena Endpoints', ()=>{
     })
 
     test('Incorrect spaceId returns a 400', async()=>{
-        const response = await axios.get(`${BACKEND_URL}/api/v1/space/wrongSpaceId`)
+        const response = await axios.get(`${BACKEND_URL}/api/v1/space/wrongSpaceId`,{
+            headers: {
+                authorization: `Bearer ${token}`
+            }
+        })
         expect(response.statusCode).toBe(400)
     })
 
     test('Correct space id returns all the elements', async()=>{
-        const response = await axios.get(`${BACKEND_URL}/api/v1/space/${spaceId}`)
+        const response = await axios.get(`${BACKEND_URL}/api/v1/space/${spaceId}`,{
+            headers: {
+                authorization: `Bearer ${token}`
+            }
+        })
         expect(response.data.dimensions).toBe("100x200")
         expect(response.data.elements.length).toBe(2)
     })
 
     test('Delete endpoint is able to delete an element', async()=>{
-        const response = await axios.get(`${BACKEND_URL}/api/v1/space/${spaceId}`)
+        const response = await axios.get(`${BACKEND_URL}/api/v1/space/${spaceId}`,{
+            headers: {
+                authorization: `Bearer ${token}`
+            }
+        })
         await axios.delete(`${BACKEND_URL}/api/v1/space/element`,{
             spaceId: spaceId,
             elementId: response.data.elementId[0].id
         })
-        const newResponse = await axios.get(`${BACKEND_URL}/api/v1/space/${spaceId}`)
+        const newResponse = await axios.get(`${BACKEND_URL}/api/v1/space/${spaceId}`,{
+            headers: {
+                authorization: `Bearer ${token}`
+            }
+        })
         expect(response.data.elements.length).toBe(1)
     })
 
@@ -488,6 +504,10 @@ describe('Arena Endpoints', ()=>{
             "spaceId": spaceId,
             "x": 1000000,
             "y": 10000000, 
+        },{
+            headers: {
+                authorization: `Bearer ${token}`
+            }
         })
         
         expect(response.statusCode).toBe(400)
@@ -500,6 +520,10 @@ describe('Arena Endpoints', ()=>{
             "spaceId": spaceId,
             "x": 10,
             "y": 10
+        },{
+            headers: {
+                authorization: `Bearer ${token}`
+            }
         })
         const newResponse = await axios.get(`${BACKEND_URL}/api/v1/space/${spaceId}`)
         expect(response.data.elements.length).toBe(3)
