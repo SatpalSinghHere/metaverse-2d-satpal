@@ -178,7 +178,7 @@ describe("Space information", ()=>{
         adminToken = signinResponse.body.token 
         
         const userSignupResponse = await axios.post(`${BACKEND_URL}/api/v1/signup`, {
-            username, password, type:"admin"
+            username, password, type:"user"
         })
 
         userId = signupResponse.body.userId 
@@ -357,3 +357,92 @@ describe("Space information", ()=>{
 
 })
 
+describe('Arena Endpoints', ()=>{
+    let mapid=''
+    let element1Id =''
+    let element2Id =''
+    let adminToken = ""
+    let adminId=""
+    let userToken = ""
+    let userId = ""
+    beforeAll(async()=>{
+        const username = "satpal"+Math.random()
+        const password = "password"
+
+        const signupResponse = await axios.post(`${BACKEND_URL}/api/v1/signup`, {
+            username, password, type:"admin"
+        })
+
+        adminId = signupResponse.body.userId 
+
+        const signinResponse = await axios.post(`${BACKEND_URL}/api/v1/signin`, {
+            username, password
+        })
+        adminToken = signinResponse.body.token 
+        
+        const userSignupResponse = await axios.post(`${BACKEND_URL}/api/v1/signup`, {
+            username, password, type:"user"
+        })
+
+        userId = signupResponse.body.userId 
+
+        const userSigninResponse = await axios.post(`${BACKEND_URL}/api/v1/signin`, {
+            username, password
+        })
+        userToken = userSigninResponse.body.token 
+        
+        const element1 = await axios.post(`${BACKEND_URL}/api/v1/admin/element`, {
+            "imageUrl": "https://w7.pngwing.com/pngs/680/217/png-transparent",
+            "width": 1,
+            "height": 1,
+            "static": true
+        },{
+            headers: {
+                authorization: `Bearer ${token}`
+            }
+        })
+        const element2 = await axios.post(`${BACKEND_URL}/api/v1/admin/element`, {
+            "imageUrl": "https://w7.pngwing.com/pngs/680/217/png-transparent",
+            "width": 1,
+            "height": 1,
+            "static": true
+        },{
+            headers: {
+                authorization: `Bearer ${token}`
+            }
+        })
+
+        element1Id = element1.id
+        element2Id = element2.id
+
+        const map = await axios.post(`${BACKEND_URL}/api/v1/admin/map`, {
+            "thumbnail": "https://e7.pngegg.com/pngimages/1001/156/png-clipart-map-pixel-art-map-angle-white.png",
+            "dimensions": "100x200",
+            "defaultElements": [
+                {
+                    elementId: element1Id,
+                    x: 20,
+                    y: 20
+                },
+                {
+                    elementId: element2Id,
+                    x: 18,
+                    y: 20
+                },
+                {
+                    elementId: element2Id,
+                    x: 19,
+                    y: 20
+                }
+            ]
+        },{
+            headers: {
+                authorization: `Bearer ${token}`
+            }
+        })
+
+        mapid = map.id
+
+        
+    })
+})
