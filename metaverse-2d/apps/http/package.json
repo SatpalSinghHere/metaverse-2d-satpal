@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "./dist/index.js",
   "scripts": {
-    "build": "tsc -b",
+    "build": "esbuild src/index.ts --bundle --outfile=dist/index.js --platform=node --tsconfig=tsconfig.json",
     "start": "node dist/index"
   },
   "keywords": [],
@@ -11,8 +11,9 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@repo/db": "*",
     "@types/express": "^5.0.0",
-    "express": "^4.21.1",
-    "@repo/db":"*"
+    "esbuild": "^0.24.0",
+    "express": "^4.21.1"
   }
 }
