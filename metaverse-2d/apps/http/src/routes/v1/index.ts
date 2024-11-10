@@ -48,12 +48,12 @@ router.post('/signin', async(req, res)=>{
             }
         })
         if(!user){
-            res.status(401).json({message: 'Invalid username or password'})
+            res.status(403).json({message: 'Invalid username or password'})
             return
         }
         const isPasswordValid = await compare(parsedData.data.password, user.password)
         if(!isPasswordValid){
-            res.status(401).json({message: 'Invalid username or password'})
+            res.status(403).json({message: 'Invalid username or password'})
             return
         }
 
