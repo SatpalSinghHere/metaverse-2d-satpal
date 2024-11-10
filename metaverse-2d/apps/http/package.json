@@ -4,7 +4,8 @@
   "main": "./dist/index.js",
   "scripts": {
     "build": "esbuild src/index.ts --bundle --outfile=dist/index.js --platform=node --tsconfig=tsconfig.json",
-    "start": "node dist/index"
+    "start": "node dist/index",
+    "dev": "esbuild src/index.ts --bundle --outfile=dist/index.js --platform=node --tsconfig=tsconfig.json && node dist/index"
   },
   "keywords": [],
   "author": "",
